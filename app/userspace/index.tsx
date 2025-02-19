@@ -1,9 +1,14 @@
-import { Link } from "expo-router";
+import { Stack, router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
+import { Alert, Button, FlatList, StyleSheet, Text, View } from "react-native";
 import { useTokenContext } from "../../src/contexts/userContext";
 import api from "../../src/services/api";
 import { Car } from "../../src/types/Car";
+import CreateButton from "@/components/CreateButton";
+import DefaultButton from "@/components/DefaultButton";
+import DeleteButton from "@/components/DeleteButton";
+import CarItem from "@/components/CarItem";
+import HeaderRight from "@/components/HeaderRight";
 
 export default function Home() {
   const { token } = useTokenContext();
@@ -25,32 +30,54 @@ export default function Home() {
       });
   }, []);
 
+    const handleDelete = (id?: string) => {
+      api
+        .delete(`/api/collections/cars/records/${id}`, {
+          headers: { Authorization: token },
+        })
+        .then(() => {
+          Alert.alert("Sucesso", "Carro excluído com sucesso");
+          router.push("/userspace"); // Redireciona após a exclusão
+        })
+        .catch(() => {
+          Alert.alert("Erro", "Falha ao excluir carro.");
+        });
+    };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cars API LIST</Text>
+      <Stack.Screen 
+        options={{
+          title: "Home",
+          headerRight: () => <HeaderRight />
+        }}
+      />
+      <CreateButton 
+        style={{ marginVertical: 20 }} 
+        href="/userspace/create_car" 
+        title="Criar Carro" 
+      />
 
-      <Link href="/userspace/create_car">Create a new Car</Link>
+      <View style={styles.searches}>
+        <DefaultButton
+          href="/userspace/search_cars"
+          title="Buscar Carros"
+        />
+
+        <DefaultButton
+          href="/userspace/cars_hp"
+          title="Ordem por HP"
+        />
+      </View>
 
       <FlatList
         data={cars}
-        renderItem={({ item }) => {
-          // console.log(item);
-
-          return (
-            <View style={styles.item}>
-              <Text>{item.id}</Text>
-              <Text>{item.brand}</Text>
-              <Text>{item.model}</Text>
-              <Text>{item.hp}</Text>
-
-              <Link href={`/userspace/${item.id}/update_car`}>
-                <Text>Edit</Text>
-              </Link>
-            </View>
-          );
-        }}
-        keyExtractor={(car) => car.id}
+        renderItem={({ item }) => (
+          <CarItem car={item} onDelete={handleDelete} />
+        )}
+        keyExtractor={(car) => car.id || ""}
         style={styles.flatlist}
+        contentContainerStyle={{ paddingBottom: 50 }}
       />
     </View>
   );
@@ -61,16 +88,61 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: '#1c1c1c'
   },
   flatlist: {
     padding: 16,
     width: "100%",
     flex: 1,
+    marginTop: 20,
   },
-  title: { fontSize: 16, fontWeight: "bold", marginBottom: 16 },
+  title: { 
+    fontSize: 16, 
+    fontWeight: "bold", 
+    marginBottom: 16 
+  },
   item: {
+    display: 'flex',
+    width: '90%',
     flexDirection: "column",
-    marginTop: 8,
-    marginBottom: 16,
+    marginTop: 10,
+    padding: 30,
+    marginBottom: 10,
+    borderColor: "#dedede",
+    borderWidth: 2,
+    borderStyle: "solid",
+    borderRadius: 10,
+    boxShadow: "4px 4px #dedede",
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  titleProduct: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 15,
+    color: "#dedede"
+  },
+  infoTitle: {
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 5,
+    color: "#dedede"
+  },
+  info: {
+    fontWeight: "500",
+    fontSize: 13,
+  },
+  buttons: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 20,
+  },
+  searches: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 40,
+  }
 });

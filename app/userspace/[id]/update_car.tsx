@@ -1,9 +1,11 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Button, TextInput, StyleSheet, View } from "react-native";
+import { Alert, Button, TextInput, StyleSheet, View, Text } from "react-native";
 import { useTokenContext } from "../../../src/contexts/userContext";
 import api from "../../../src/services/api";
 import { Car } from "../../../src/types/Car";
+import DefaultButton from "@/components/DefaultButton";
+import ActionButton from "@/components/ActionButton";
 
 export default function UpdateCar() {
   const { id } = useLocalSearchParams(); // Obtém o ID da URL
@@ -14,7 +16,6 @@ export default function UpdateCar() {
   const [hp, setHp] = useState("");
 
   useEffect(() => {
-    console.log("Car ID:", id); // Verificar se o ID está correto
   if (!id) {
     Alert.alert("Error", "Car ID is missing.");
     return;
@@ -34,7 +35,7 @@ export default function UpdateCar() {
       })
       .catch((error) => {
         console.error("Fetch Error:", error.response?.data || error.message);
-        Alert.alert("Error", "Failed to fetch car data.");
+        Alert.alert("Erro", "Falha ao buscar dados do carro.");
       });
   }, [id]);
 
@@ -46,62 +47,86 @@ export default function UpdateCar() {
         { headers: { Authorization: token } }
       )
       .then(() => {
-        Alert.alert("Success", "Car updated successfully");
-        router.push("/userspace"); // Redireciona após a atualização
+        Alert.alert("Successo", "Carro atualizado com sucesso!");
+        router.push("/userspace"); 
       })
       .catch(() => {
-        Alert.alert("Error", "Failed to update car.");
-      });
-  };
-
-  const handleDelete = () => {
-    api
-      .delete(`/api/collections/cars/records/${id}`, {
-        headers: { Authorization: token },
-      })
-      .then(() => {
-        Alert.alert("Success", "Car deleted successfully");
-        router.push("/userspace"); // Redireciona após a exclusão
-      })
-      .catch(() => {
-        Alert.alert("Error", "Failed to delete car.");
+        Alert.alert("Erro", "Falha ao atualizar o carro.");
       });
   };
 
   return (
     <View style={styles.container}>
+      <Stack.Screen 
+        options={{
+          title: "Atualizar Carro",
+        }}
+      />
+      <Text style={styles.titleInput}>Marca:</Text>
       <TextInput
         value={brand}
         onChangeText={setBrand}
         placeholder="Brand"
         style={styles.input}
+        placeholderTextColor="#dedede"
       />
+      <Text style={styles.titleInput}>Modelo:</Text>
       <TextInput
         value={model}
         onChangeText={setModel}
         placeholder="Model"
         style={styles.input}
+        placeholderTextColor="#dedede"
       />
+
+      <Text style={styles.titleInput}>HP (Potência):</Text>
       <TextInput
         value={hp}
-        onChangeText={setHp}
+        onChangeText={(text) => setHp(text.replace(/[^0-9]/g, ""))}
         placeholder="HP"
-        keyboardType="numeric"
+        keyboardType="number-pad"
         style={styles.input}
+        placeholderTextColor="#dedede"
       />
-      <Button title="Update Car" onPress={handleUpdate} />
-      <Button title="Delete Car" onPress={handleDelete} color="red" />
+
+      <View style={styles.actionButton}>
+        <ActionButton
+          title="Editar Carro"
+          onPress={handleUpdate}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { 
+    flex: 1, 
+    padding: 16,
+    backgroundColor: "#1c1c1c",
+  },
   input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingLeft: 8,
+    width: '100%',
+    height: 50,
+    borderRadius: 10,
+    borderColor: "#dedede",
+    borderWidth: 2,
+    fontSize: 15,
+    fontWeight: "600",
+    backgroundColor: "#323232",
+    padding: 10,
+    display: 'flex',
+    alignItems: 'center',
+    color: '#dedede',
+    marginBottom: 20,
+    marginTop: 5,
+  },
+  titleInput: {
+    color: "#dedede",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  actionButton: {
+    alignItems: "center"
   },
 });
